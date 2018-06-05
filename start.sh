@@ -6,6 +6,13 @@ if [ "$(tty)" != "/dev/tty1" ]; then
     exit 1
 fi
 
+# run script instead of bash intance, when it terminates, the raspberry will shutdown
+KIOSK_PROGRAM=$1
+if [ -n "$KIOSK_PROGRAM" ]; then
+    # bigger font
+    setfont Lat15-TerminusBold28x14.psf.gz || true
+fi
+
 cd "$(dirname -- "$0")"
 
 mkdir -p ext
@@ -46,10 +53,15 @@ if [ ! -f console.sh ]; then
 echo
 echo "  AceStream for Raspbian Lite"
 echo
-echo "  use './play.sh ACESTREAM_HASH' to start a stream"
-echo "  use './stop.sh' to exit"
-echo
-bash
+if [ -n "$1" ]; then
+    "$1"
+else
+    echo "  use './play.sh ACESTREAM_HASH' to start a stream"
+    echo "  use 'exit' or './stop.sh' to exit"
+    echo
+    bash
+fi
+./stop.sh
 EOF
     chmod +x console.sh
 fi
@@ -60,7 +72,7 @@ cat << EOF > "$TMP_FILE"
 startup_message off
 defscrollback 10000
 
-screen -t console ./ext/console.sh
+screen -t console ./ext/console.sh "$KIOSK_PROGRAM"
 split -v
 focus right
 screen -t ace-engine ./ext/acestream.sh
@@ -73,3 +85,9 @@ screen -c "$TMP_FILE"
 rm "$TMP_FILE"
 
 clear
+
+if [ -n "$KIOSK_PROGRAM" ]; then
+    echo "SHUTDOWN in 5 seconds, CTRL-C to cancel"
+    sleep 5
+    sudo shutdown 0
+fi
