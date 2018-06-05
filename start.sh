@@ -13,7 +13,7 @@ cd ext
 # install dependencies
 if ! command -v omxplayer >/dev/null; then
     sudo apt-get update
-    sudo apt-get install -y git screen python-gevent python-psutil python-requests omxplayer
+    sudo apt-get install -y git screen python-gevent python-psutil python-requests python3-requests python3-lxml python3-cssselect omxplayer
 fi
 # download acestream engine
 if [ ! -d acestream ]; then
