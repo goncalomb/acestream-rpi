@@ -1,6 +1,6 @@
 import curses
 
-from . import arenavision
+from . import MenuManager, arenavision
 
 class WrappedWindow():
     def __init__(self, instance):
@@ -17,32 +17,14 @@ class WrappedWindow():
 def main(stdscr):
     # wrap window instance to make addstr safer (no overflow)
     stdscr = WrappedWindow(stdscr)
+    stdscr.timeout(1000)
 
-    menu_stack = []
-
-    current_menu = arenavision.Menu()
-    current_menu.open(stdscr)
-    current_menu.resize(stdscr.getmaxyx())
-
-    while True:
-        current_menu.draw(stdscr)
+    mm = MenuManager(stdscr, arenavision.Menu())
+    while mm:
+        mm.draw()
         c = stdscr.getch()
         stdscr.erase()
-        if c == curses.KEY_RESIZE:
-            current_menu.resize(stdscr.getmaxyx())
-        elif c == curses.KEY_ENTER or c == 10 or c == 13:
-            current_menu.select()
-        elif c == curses.KEY_BACKSPACE:
-            if not current_menu.back():
-                current_menu.exit()
-                if len(menu_stack):
-                    current_menu = menu_stack.pop()
-                    current_menu.open(stdscr)
-                    current_menu.resize(stdscr.getmaxyx())
-                    continue
-                else:
-                    break
-        current_menu.ch(c)
+        mm.ch(c)
 
     stdscr.clear()
     stdscr.refresh()

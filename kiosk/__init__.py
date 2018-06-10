@@ -1,8 +1,49 @@
 import curses
 
-class BaseMenu:
+class MenuManager:
+    def __init__(self, win, start_menu):
+        self._win = win
+        self._menu_stack = []
+        self._current_menu = None
+        self.change_menu(start_menu)
 
+    def __bool__(self):
+        return bool(self._current_menu)
+
+    def change_menu(self, menu, replace=False):
+        if self._current_menu:
+            self._current_menu.exit()
+            if not replace:
+                self._menu_stack.append(self._current_menu)
+        self._current_menu = menu
+        self._current_menu._mm = self
+        self._current_menu.open(self._win)
+        self._current_menu.resize(self._win.getmaxyx())
+
+    def pop_menu(self):
+        if self._menu_stack:
+            self.change_menu(self._menu_stack.pop(), True)
+        else:
+            self._current_menu.exit()
+            self._current_menu = None
+
+    def draw(self):
+        self._current_menu.draw(self._win)
+
+    def ch(self, c):
+        if c == curses.KEY_RESIZE:
+            self._current_menu.resize(self._win.getmaxyx())
+        elif c == curses.KEY_ENTER or c == 10 or c == 13:
+            self._current_menu.select()
+        elif c == curses.KEY_BACKSPACE and not self._current_menu.back():
+            self.pop_menu()
+            return
+        self._current_menu.ch(c)
+
+
+class BaseMenu:
     def __init__(self):
+        self._mm = None
         pass
 
     def open(self, win):
@@ -26,9 +67,7 @@ class BaseMenu:
     def exit(self):
         pass
 
-
 class SelectMenu(BaseMenu):
-
     def __init__(self, title):
         self._title = title
         self._entries = []
