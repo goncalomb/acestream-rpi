@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
-
 import curses, requests, lxml.html, re, subprocess
+
+from . import SelectMenu
 
 player_proc = None
 
@@ -75,72 +75,20 @@ def get_arena_vision_streams():
         return data
     return None
 
+class Menu(SelectMenu):
+    def __init__(self):
+        super().__init__('Arena Vision Streams')
 
-def main(stdscr):
-    size = (0, 0)
+    def open(self, win):
+        win.addstr(1, 1, 'LOADING', curses.A_REVERSE)
+        win.refresh()
+        self.set_entries(get_arena_vision_streams())
+        win.erase()
 
-    menu_off = 0
-    menu_len = 5
-    menu_cur = 0
+    def select(self):
+        e = self.current_entry()
+        if e:
+            stream_play(e.get_hash())
 
-    def handle_size():
-        nonlocal size, menu_len
-        size = stdscr.getmaxyx()
-        menu_len = max(0, size[0] - 6)
-
-    handle_size()
-
-    def safe_addstr(y, x, strr, attr=0):
-        if y < size[0] - 1 and x < size[1] - 1:
-            stdscr.addnstr(y, x, strr, size[1] - x - 1, attr)
-
-    # get menu data
-    safe_addstr(1, 1, 'LOADING', curses.A_REVERSE)
-    stdscr.refresh()
-    data = get_arena_vision_streams()
-
-    # menu loop
-    while True:
-        safe_addstr(1, 1, 'Arena Vision Streams')
-        for i in range(menu_off, min(menu_off + menu_len, len(data))):
-            if i == menu_cur:
-                safe_addstr(3 + i - menu_off, 1, str(data[i]), curses.A_REVERSE)
-            else:
-                safe_addstr(3 + i - menu_off, 1, str(data[i]))
-        safe_addstr(size[0] - 2, 1, '{} / {} '.format(menu_cur + 1, len(data)))
-
-        c = stdscr.getch()
-        stdscr.erase()
-        if c == curses.KEY_BACKSPACE:
-            if not stream_stop():
-                break
-            else:
-                safe_addstr(size[0] - 2, 10, 'KILLING PLAYER', curses.A_REVERSE)
-                stdscr.refresh()
-        elif c == curses.KEY_RESIZE:
-            handle_size()
-        elif c == curses.KEY_UP:
-            menu_cur -= 1
-            if menu_cur < 0:
-                menu_cur = len(data) - 1
-        elif c == curses.KEY_DOWN:
-            menu_cur = (menu_cur + 1)%len(data)
-        elif c == curses.KEY_ENTER or c == 10 or c == 13:
-            stream_play(data[menu_cur].get_hash())
-
-        pad = 2 if menu_len > 5 else 0
-        if menu_cur < menu_off + pad:
-            menu_off = menu_cur - pad
-            if menu_off < 0:
-                menu_off = 0
-        elif menu_cur > menu_off + menu_len - pad - 1:
-            menu_off = menu_cur - menu_len + pad + 1
-
-    stdscr.clear()
-    stdscr.refresh()
-
-if __name__ == '__main__':
-    try:
-        curses.wrapper(main)
-    except KeyboardInterrupt:
-        pass
+    def back(self):
+        return stream_stop()

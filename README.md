@@ -16,7 +16,7 @@ It works with the [AceStream Engine borrowed from Android](https://github.com/ro
 
 ## Kiosk mode
 
-* Run `./acestream-rpi/start.sh [<program>]` with program parameter, this puts the system in kiosk mode and runs the program. When the program exits the system will shutdown. The program should be some kind of CLI AceStream provider. Right now you can use `./acestream-rpi/start.sh ./arenavision.py` as an example.
+* Run `./acestream-rpi/start.sh [<program>]` with program parameter, this puts the system in kiosk mode and runs the program. When the program exits the system will shutdown. The program should be some kind of CLI AceStream provider. Right now you can use `./acestream-rpi/start.sh ./kiosk.sh` as an example.
 
 ## Setup lirc (IR remote control)
 
