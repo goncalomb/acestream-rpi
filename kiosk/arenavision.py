@@ -1,23 +1,7 @@
-import curses, requests, lxml.html, re, subprocess
+import curses, requests, lxml.html, re
 
 from . import SelectMenu
-
-player_proc = None
-
-def stream_play(h):
-    global player_proc
-    stream_stop()
-    player_proc = subprocess.Popen(['/bin/bash', './play.sh', h], close_fds=True)
-
-def stream_stop():
-    global player_proc
-    if player_proc:
-        player_proc.kill()
-        player_proc.send_signal(subprocess.signal.SIGKILL)
-        player_proc = None
-        return True
-    player_proc = None
-    return False
+from .acestream import OpenStreamMenu
 
 class ArenaVisionStream:
 
@@ -88,7 +72,4 @@ class Menu(SelectMenu):
     def select(self):
         e = self.current_entry()
         if e:
-            stream_play(e.get_hash())
-
-    def back(self):
-        return stream_stop()
+            self._mm.change_menu(OpenStreamMenu(e.get_hash()))
